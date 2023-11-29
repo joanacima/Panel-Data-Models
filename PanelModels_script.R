@@ -1,31 +1,43 @@
+# Panel Data Econometrics using R
+# EEG Data Pro
+# November, 27, 2023
+
 # 1. Data Preparation and Import
 
   # 1.1 Clean the work environment
 rm(list = ls())
 
   # 1.2 Set the working directory
-setwd("C:\\Users\\Joana Cima\\Documents\\GitHub\\Panel_models_R")
+setwd("C:\\Users\\Joana Cima\\Documents\\GitHub\\Panel-Data-Models")
 
   # 1.3 Import the data
 # install.packages("haven")
 library(haven)
-data <- read_dta("mus08psidextract.dta")
+data <- as.data.frame(read_dta("mus08psidextract.dta"))
 
 # 2. Data Description:
 
-  # 2.1 View tha variables
+  # 2.1 View the variables
 names(data)
 
-  # 2.2 Descriptive statistics
-summary(data)
+# 3. Panel data setup
 
 # install.packages("plm")
 library(plm)
 
-# 3. Panel data setup
-
   # 3.1 Define data as panel data
 pdata <- pdata.frame(data, index = c("id", "t"))
+
+  # 3.2 Descriptive statistics
+summary(data)
+library(stargazer)
+library(dplyr)
+
+data %>%
+  dplyr::select(exp, ed, lwage, occ, south, smsa, ms, fem, union, blk) %>% 
+  stargazer(title="",
+            type= "text", out = "Descriptive_Statistics.html",
+            digits = 2)
 
 
 # 4. Econometric analysis
@@ -60,9 +72,9 @@ summary(fe1)
 
   # 4.4 LSDV - Least Squares Dummy Variables
 
+
 LSDV <- lm(lwage ~ ms + exp + exp2 + occ + ind + south + smsa + union + factor(id), data = pdata)
 summary(LSDV)
-
 
 # 5. Specification Tests for Panel Data
 
@@ -72,7 +84,9 @@ plmtest(pols1, type = "bp")
 
   # 5.2 Test the significance of the fixed effects for 'id' (OLS vs. LSDV(FE))
 
-anova(LSDV, pols1)
+LSDV_reduced <- lm(lwage ~ ms + exp + exp2 + occ + ind + south + smsa + union, data = pdata)
+
+anova(LSDV, LSDV_reduced)
 
   # 5.3 Hausman test (RE vs FE)
 
@@ -82,6 +96,10 @@ phtest(fe1, re1)
 
 library(lmtest)
 bptest(fe1)
+
+  # 5.5 Cross-sectional dependence test:
+
+pcdtest(fe1, test = "lm")
 
   # 5.5 Serial Correlation Test:
 
