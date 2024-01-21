@@ -1,17 +1,15 @@
 # Panel Data Econometrics using R
 # EEG Data Pro
-# November, 27, 2023
-
 # 1. Data Preparation and Import
 
   # 1.1 Clean the work environment
 rm(list = ls())
 
   # 1.2 Set the working directory
-setwd("C:\\Users\\Joana Cima\\Documents\\GitHub\\Panel-Data-Models")
+#setwd("C:\\Users\\Joana Cima\\Documents\\GitHub\\Panel-Data-Models")
 
   # 1.3 Import the data
-# install.packages("haven")
+#install.packages("haven")
 library(haven)
 data <- as.data.frame(read_dta("mus08psidextract.dta"))
 
@@ -19,6 +17,11 @@ data <- as.data.frame(read_dta("mus08psidextract.dta"))
 
   # 2.1 View the variables
 names(data)
+
+  # 2.2 Analyse the missing values
+
+library(naniar)
+vis_miss(data)
 
 # 3. Panel data setup
 
@@ -28,6 +31,11 @@ library(plm)
   # 3.1 Define data as panel data
 pdata <- pdata.frame(data, index = c("id", "t"))
 
+  # 3.2 Exploring panel data
+
+library(gplots)
+
+plotmeans(lwage ~ id, main="Heterogeineity across individuals", data=pdata)
   # 3.2 Descriptive statistics
 summary(data)
 library(stargazer)
@@ -37,6 +45,13 @@ data %>%
   dplyr::select(exp, ed, lwage, occ, south, smsa, ms, fem, union, blk) %>% 
   stargazer(title="",
             type= "text", out = "Descriptive_Statistics.html",
+            digits = 2)
+
+# 3.2 Descriptive statistics - change columns/rows
+data %>%
+  dplyr::select(exp, ed, lwage, occ, south, smsa, ms, fem, union, blk) %>% 
+  stargazer(title="",
+            type= "text", flip=TRUE, out = "Descriptive_Statistics2.html",
             digits = 2)
 
 
@@ -76,6 +91,10 @@ summary(fe1)
 LSDV <- lm(lwage ~ ms + exp + exp2 + occ + ind + south + smsa + union + factor(id), data = pdata)
 summary(LSDV)
 
+summary(LSDV)
+
+stargazer(fe1, LSDV, type="text")
+
 # 5. Specification Tests for Panel Data
 
   # 5.1 LM Test for Unobserved Effects (OLS vs random effects)
@@ -101,13 +120,12 @@ bptest(fe1)
 
 pcdtest(fe1, test = "lm")
 
-  # 5.5 Serial Correlation Test:
+  # 5.6 Serial Correlation Test:
 
 pbgtest(fe1)
 
 # 6. Final specification
 fe_robust <- coeftest(fe1, vcovHC(fe1, method = "arellano"))
-
 
 # 7. Export
 
