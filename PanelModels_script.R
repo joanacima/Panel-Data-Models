@@ -93,7 +93,11 @@ summary(LSDV)
 
 summary(LSDV)
 
-stargazer(fe1, LSDV, type="text")
+stargazer(fe1, LSDV, 
+          type = "html", 
+          out = "FE.html", 
+          column.labels = c("FE", "LSDV"), 
+          title = "Model estimation - Fixed effects")
 
 # 5. Specification Tests for Panel Data
 
